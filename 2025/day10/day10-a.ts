@@ -37,10 +37,6 @@ class Machine {
     return parseInt(button.join(""), 2);
   }
 
-  public pressBtn(btn: number, lightState: number) {
-    return btn ^ lightState;
-  }
-
   private countBinaryOnes(bin: number) {
     let cnt = 0;
     while (bin > 0) {
@@ -51,33 +47,22 @@ class Machine {
     return cnt;
   }
 
-  public solveByBruteForce(
-    lightState: number,
-    buttonsPressed: number,
-    currentShortestPath: number
-  ) {
-    if (lightState === this.targetLightState) {
-      return this.countBinaryOnes(buttonsPressed);
-    }
-    if (this.countBinaryOnes(buttonsPressed) >= currentShortestPath) {
-      return;
-    }
-
+  public solveByBruteForce() {
     let shortestPath = this.buttons.length;
-    for (let i = 0; i < this.buttons.length; i++) {
-      if ((buttonsPressed & (1 << i)) > 0) {
-        continue;
+
+    for (let i = 0; i < 1 << this.buttons.length; i++) {
+      let lightState = 0;
+      for (let j = 0; j < this.buttons.length; j++) {
+        if (i & (1 << j)) {
+          lightState = lightState ^ this.buttons[j];
+        }
       }
 
-      const btn = this.buttons[i];
-      const newLightState = this.pressBtn(btn, lightState);
-      const ret = this.solveByBruteForce(
-        newLightState,
-        buttonsPressed | (1 << i),
-        shortestPath
-      );
-      if (ret && ret < shortestPath) {
-        shortestPath = ret;
+      if (lightState === this.targetLightState) {
+        const btnCount = this.countBinaryOnes(i);
+        if (btnCount < shortestPath) {
+          shortestPath = btnCount;
+        }
       }
     }
 
@@ -106,13 +91,13 @@ async function main() {
   let sum = 0;
   let i = 0;
   for (const machine of machines) {
-    let pathLength = machine.solveByBruteForce(0, 0, machine.buttons.length);
-    console.log(i, pathLength);
+    let pathLength = machine.solveByBruteForce();
+    // console.log(i, pathLength);
     sum += pathLength ?? 0;
     i++;
   }
 
-  console.log(sum);
+  console.log("Total:", sum);
 
   // [.#.....##.]
   //  0123456789  => 178
